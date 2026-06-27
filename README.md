@@ -1,10 +1,8 @@
-# DVWA Web Penetration Testing Report
+# Web Application Security Assessment – DVWA
 
 ## Overview
 
 This repository documents a manual web application penetration test conducted against **Damn Vulnerable Web Application (DVWA)** in a controlled lab environment. The objective was to identify, validate, and document common web security vulnerabilities while following a structured penetration testing methodology.
-
-> **Disclaimer:** This assessment was performed only against an intentionally vulnerable application for educational and ethical purposes.
 
 ---
 
@@ -85,3 +83,4 @@ Each vulnerability contains:
 
 ---
 
+> **Disclaimer:** This assessment was performed only against an intentionally vulnerable application for educational and ethical purposes.
