@@ -4,8 +4,6 @@
 
 Brute Force is an authentication attack where multiple username and password combinations are tested until valid credentials are discovered. The effectiveness of the attack depends on the application's authentication controls.
 
----
-
 ## Security Level Comparison
 
 | Level      | Protection                          | Result                                          |
@@ -25,12 +23,6 @@ Brute Force is an authentication attack where multiple username and password com
 3. Configure the password parameter as the payload position (**Sniper Attack**).
 4. Load a password wordlist and start the attack.
 5. Compare the responses to identify successful authentication.
-
-### Attack Method
-
-* **Tool:** Burp Suite Intruder
-* **Attack Type:** Sniper
-* **Payload:** Password Wordlist
 
 ### Evidence
 
@@ -60,12 +52,6 @@ The application allowed unlimited authentication attempts without implementing a
 2. Observe additional security controls such as request delays.
 3. Compare the application responses to determine whether valid credentials can still be identified.
 
-### Attack Method
-
-* **Tool:** Burp Suite Intruder
-* **Attack Type:** Sniper
-* **Payload:** Password Wordlist
-
 ### Evidence
 
 **Intruder Results**
@@ -93,12 +79,6 @@ Additional authentication controls reduced the speed of the attack but did not c
 1. Repeat the automated attack.
 2. Monitor the responses for lockout mechanisms, delays, or failed authentication.
 3. Verify whether valid credentials can still be identified.
-
-### Attack Method
-
-* **Tool:** Burp Suite Intruder
-* **Attack Type:** Sniper
-* **Payload:** Password Wordlist
 
 ### Evidence
 
@@ -128,9 +108,7 @@ Successful exploitation may allow an attacker to:
 * Compromise sensitive information.
 * Escalate privileges through compromised administrative accounts.
 * Reuse discovered credentials across other services.
-
----
-
+  
 ## Remediation
 
 * Limit repeated login attempts using rate limiting or account lockout.
