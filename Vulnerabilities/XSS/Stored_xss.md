@@ -1,142 +1,135 @@
-# Stored Cross-Site Scripting (XSS)
+# Stored Cross-Site Scripting (Stored XSS)
 
 ## Overview
 
-Stored Cross-Site Scripting (Stored XSS) occurs when user input is permanently stored by the application and later rendered without proper sanitization or output encoding. As a result, malicious JavaScript executes whenever the affected page is viewed.
-
----
+Stored Cross-Site Scripting (Stored XSS) occurs when user-supplied input is permanently stored by the application (e.g., in a database) and executed whenever users access the affected page.
 
 ## Security Level Comparison
 
-| Level      | Protection                              | Result                                                     |
-| ---------- | --------------------------------------- | ---------------------------------------------------------- |
-| **Low**    | No input filtering                      | Payload is stored and executed successfully.               |
-| **Medium** | Basic input filtering                   | Common payloads are filtered, requiring bypass techniques. |
-| **High**   | Improved validation and output encoding | Payload execution becomes significantly more difficult.    |
+| Feature | Low | Medium | High |
+|---------|------|---------|------|
+| Protection | No filtering | Partial filtering | Improved filtering |
+| Bypass Technique | Standard `<script>` | Mixed-case `<ScRiPt>` *(or standard payload if applicable)* | HTML Event (`onerror`) *(or standard payload if applicable)* |
+
+
+> **Note:** The tested DVWA version executed `<script>alert(document.domain)</script>` successfully across all security levels. The intended bypass techniques are also included for reference.
 
 ---
 
-## Low Security
+## Low Security Level
 
-### Payloads
+### Testing
+
+| Payload | Purpose | Result |
+|---------|---------|--------|
+| `<script>alert(document.domain)</script>` | Confirm Stored XSS | JavaScript executed successfully. |
+| Refresh Page | Verify persistence | Payload executed again. |
+
+### Observation : 
+
+The application stores user input without validation or output encoding, allowing persistent JavaScript execution.
+
+### Evidence  :
+
+** screenshot - Payload Submission**
 
 ```html
-<script>alert('Stored XSS')</script>
+<script>alert(document.domain)</script>
 ```
-
-```html
-<img src=x onerror=alert('Stored XSS')>
-```
-
-```html
-<svg onload=alert('Stored XSS')>
-```
-
-### Evidence
-
-**Payload Submitted**
 
 <p align="center">
-  <img src="../screenshots/Stored_xss/01_low_payload.png" width="100%">
+<img src="https://github.com/Tanya0xCyber/Web-Application-Security-Assessment-DVWA/blob/main/Screenshots/XSS/Stored_xss/01_low_payload.png" width="100%">
 </p>
 
-**Stored Payload Executed**
+** screenshot - Stored Payload Execution**
 
 <p align="center">
-  <img src="../screenshots/Stored_xss/02_low_result.png" width="100%">
+<img src="https://github.com/Tanya0xCyber/Web-Application-Security-Assessment-DVWA/blob/main/Screenshots/XSS/Stored_xss/02_low_result.png" width="100%">
 </p>
+
+---
+
+## Medium Security Level
+
+### Testing
+
+| Payload | Purpose | Result |
+|---------|---------|--------|
+| `<script>alert(document.domain)</script>` | Verify filtering | JavaScript executed successfully. |
+| `<ScRiPt>alert(document.domain)</ScRiPt>` *(Optional)* | Test case-sensitive bypass | Executed successfully. |
+| Refresh Page | Verify persistence | Payload remained stored and executed again. |
 
 ### Observation
 
-The payload was stored without modification and executed automatically whenever the page was revisited.
-
----
-
-## Medium Security
-
-### Payloads
-
-```html
-(Add successful payload)
-```
-
-```html
-(Add alternative payload)
-```
+Basic filtering did not prevent persistent JavaScript execution.
 
 ### Evidence
 
-**Payload Submitted**
+ ** Screenshot — Payload Submission ** 
 
 <p align="center">
-  <img src="../screenshots/Stored_xss/03_medium_payload.png" width="100%">
+<img src="https://github.com/Tanya0xCyber/Web-Application-Security-Assessment-DVWA/blob/main/Screenshots/XSS/Stored_xss/03_medium_payload.png" width="100%">
 </p>
 
-**Stored Payload Executed**
+** Proof of Concept — Stored Payload Execution ** 
 
 <p align="center">
-  <img src="../screenshots/Stored_xss/04_medium_result.png" width="100%">
+<img src="https://github.com/Tanya0xCyber/Web-Application-Security-Assessment-DVWA/blob/main/Screenshots/XSS/Stored_xss/04_medium_result.png" width="100%">
 </p>
-
-### Observation
-
-Basic filtering blocked common payloads, but modified payloads successfully bypassed the implemented protection.
 
 ---
 
-## High Security
+## High Security Level
 
-### Payloads
+### Testing
 
-```html
-(Add successful payload if applicable)
-```
+| Payload | Purpose | Result |
+|---------|---------|--------|
+| `<script>alert(document.domain)</script>` | Verify filtering | JavaScript executed successfully. |
+| `<img src=x onerror=alert(document.domain)>` *(Optional)* | Test HTML event handler | Executed successfully. |
+| Refresh Page | Verify persistence | Payload remained stored and executed again. |
 
-```html
-(Add alternative payload)
-```
+### Observation
+
+Despite stronger filtering, persistent JavaScript execution remained possible in the tested environment.
 
 ### Evidence
 
-**Payload Submitted**
+** Screenshot — Payload Submission**
 
 <p align="center">
-  <img src="../screenshots/Stored_xss/05_high_payload.png" width="100%">
+<img src="https://github.com/Tanya0xCyber/Web-Application-Security-Assessment-DVWA/blob/main/Screenshots/XSS/Stored_xss/05_high_payload.png" width="100%">
 </p>
-
-**Execution Result**
-
-<p align="center">
-  <img src="../screenshots/Stored_xss/06_high_result.png" width="100%">
-</p>
-
-### Observation
-
-Improved input validation prevented the tested payloads from executing successfully.
 
 ---
+
+** Screenshot— Stored Payload Execution** 
+
+<p align="center">
+<img src="https://github.com/Tanya0xCyber/Web-Application-Security-Assessment-DVWA/blob/main/Screenshots/XSS/Stored_xss/06_high_result.png" width="100%">
+</p>
+
+---
+
+## Root Cause
+
+The application stores user-controlled input without proper output encoding. Blacklist-based filtering alone is insufficient and can be bypassed.
+
 
 ## Overall Impact
 
-Unlike Reflected XSS, the malicious payload remains stored on the application and executes whenever the affected page is viewed. This increases the likelihood of impacting multiple users.
+- Execute persistent JavaScript in users' browsers.
+- Steal session identifiers or sensitive information.
+- Modify webpage content.
+- Perform actions as authenticated users.
+- Affect every user who visits the vulnerable page.
 
-Successful exploitation may allow an attacker to:
 
-* Execute arbitrary JavaScript in users' browsers.
-* Steal session cookies (if not protected).
-* Capture sensitive user input.
-* Redirect users to malicious websites.
-* Perform persistent client-side attacks.
-
----
 
 ## Remediation
 
-* Validate and sanitize user input before storing it.
-* Encode user-controlled data before rendering it in HTML.
-* Implement a **Content Security Policy (CSP)**.
-* Use **HttpOnly** and **Secure** cookie attributes.
-* Regularly review and remove malicious user-generated content.
-
----
-
+- Encode user input before rendering it.
+- Validate and sanitize user input on the server.
+- Avoid blacklist-based filtering.
+- Implement a strong Content Security Policy (CSP).
+- Protect session cookies using `HttpOnly` and `Secure`.
