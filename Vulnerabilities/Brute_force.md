@@ -2,7 +2,7 @@
 
 ## Overview
 
-Brute Force is an authentication attack where multiple username and password combinations are tested until valid credentials are discovered. The effectiveness of the attack depends on the application's authentication controls.
+Brute Force is an authentication attack where multiple username and password combinations are tested until valid credentials are identified.
 
 ## Security Level Comparison
 
@@ -10,93 +10,78 @@ Brute Force is an authentication attack where multiple username and password com
 | ---------- | ----------------------------------- | ----------------------------------------------- |
 | **Low**    | No rate limiting or account lockout | Automated password guessing succeeds.           |
 | **Medium** | Basic authentication controls       | Attack becomes slower but remains possible.     |
-| **High**   | Stronger authentication protection  | Automated attacks are significantly restricted. |
+| **High**   | Stronger authentication controls    | Automated attacks are significantly restricted. |
 
 ---
 
 ## Low Security
 
-### Test Procedure
+### Attack Flow
 
-1. Intercept the login request using **Burp Suite**.
-2. Send the request to **Intruder**.
-3. Configure the password parameter as the payload position (**Sniper Attack**).
-4. Load a password wordlist and start the attack.
-5. Compare the responses to identify successful authentication.
+| Action | Purpose | Result |
+|--------|---------|--------|
+| Valid Login (`admin:password`) | Verify functionality | Login successful. |
+| Invalid Credentials | Check authentication | Login failed. |
+| Multiple Login Attempts | Test brute force protection | Unlimited attempts allowed. |
+| Burp Suite Intruder *(Optional)* | Automate login attempts | Requests processed without restriction. |
 
 ### Evidence
 
 **Intruder Configuration**
 
 <p align="center">
-  <img src="../screenshots/Brute_force/01_low_intruder.png" width="100%">
+  <img src="https://github.com/Tanya0xCyber/Web-Application-Security-Assessment-DVWA/blob/main/Screenshots/Brute_force/01_low_attempt.png" width="100%">
 </p>
 
-**Successful Login Response**
+**Successful Authentication**
 
 <p align="center">
-  <img src="../screenshots/Brute_force/02_low_result.png" width="100%">
+  <img src="https://github.com/Tanya0xCyber/Web-Application-Security-Assessment-DVWA/blob/main/Screenshots/Brute_force/02_low_result.png" width="100%">
 </p>
 
 ### Finding
 
-The application allowed unlimited authentication attempts without implementing account lockout or request throttling. The valid password was identified by observing a different response length and successful login message.
+Unlimited login attempts allowed valid credentials to be identified through response analysis.
 
 ---
 
 ## Medium Security
 
-### Test Procedure
+###  Attack Flow
 
-1. Repeat the attack using the same Intruder configuration.
-2. Observe additional security controls such as request delays.
-3. Compare the application responses to determine whether valid credentials can still be identified.
+| Action | Purpose | Result |
+|--------|---------|--------|
+| Invalid Credentials | Verify protection | 2-second delay introduced. |
+| Multiple Login Attempts | Test brute force resistance | Requests remain unlimited but slower. |
+| Burp Suite Intruder *(Optional)* | Automate login attempts | Attack still possible with reduced speed. |
 
-### Evidence
-
-**Intruder Results**
-
-<p align="center">
-  <img src="../screenshots/Brute_force/03_medium_intruder.png" width="100%">
-</p>
-
-**Application Response**
-
-<p align="center">
-  <img src="../screenshots/Brute_force/04_medium_result.png" width="100%">
-</p>
 
 ### Finding
 
-Additional authentication controls reduced the speed of the attack but did not completely prevent password guessing.
+Basic protections slowed automated attacks but did not prevent credential guessing.
 
 ---
 
 ## High Security
 
-### Test Procedure
+### Attack Flow
 
-1. Repeat the automated attack.
-2. Monitor the responses for lockout mechanisms, delays, or failed authentication.
-3. Verify whether valid credentials can still be identified.
+| Action | Purpose | Result |
+|--------|---------|--------|
+| Inspect Request | Identify security controls | CSRF token detected. |
+| Invalid Credentials | Verify protection | Random delay (2–4 seconds). |
+| Valid CSRF Token + Login Attempt | Test brute force feasibility | Brute force remains possible with valid tokens. |
+
 
 ### Evidence
 
-**Intruder Results**
-
 <p align="center">
-  <img src="../screenshots/Brute_force/05_high_intruder.png" width="100%">
-</p>
-
-**Application Response**
-
-<p align="center">
-  <img src="../screenshots/Brute_force/06_high_result.png" width="100%">
+  <img src="https://github.com/Tanya0xCyber/Web-Application-Security-Assessment-DVWA/blob/main/Screenshots/Brute_force/03_high_csrf.png" width="100%">
 </p>
 
 ### Finding
 
-Improved authentication controls significantly reduced the effectiveness of automated brute force attacks.
+Improved authentication controls significantly reduced the effectiveness of brute force attacks.
 
 ---
 
@@ -106,13 +91,14 @@ Successful exploitation may allow an attacker to:
 
 * Gain unauthorized access to user accounts.
 * Compromise sensitive information.
-* Escalate privileges through compromised administrative accounts.
-* Reuse discovered credentials across other services.
-  
+* Escalate privileges through compromised accounts.
+* Reuse valid credentials across other services.
+
+---
+
 ## Remediation
 
 * Limit repeated login attempts using rate limiting or account lockout.
 * Enforce strong password policies.
-* Implement Multi-Factor Authentication (MFA).
+* Enable Multi-Factor Authentication (MFA).
 * Monitor and alert on repeated failed login attempts.
-
