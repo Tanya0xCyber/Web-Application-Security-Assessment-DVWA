@@ -2,38 +2,34 @@
 
 ## Overview
 
-Unrestricted File Upload occurs when an application fails to properly validate uploaded files. This may allow an attacker to upload executable or malicious files that can lead to unauthorized access or remote code execution.
+Unrestricted File Upload allows attackers to upload malicious files to the server. If these files are executed, they can lead to remote code execution (RCE) and complete system compromise.
 
 ---
 
 ## Security Level Comparison
 
-| Level      | Protection                 | Result                                                            |
-| ---------- | -------------------------- | ----------------------------------------------------------------- |
-| **Low**    | No file validation         | Malicious files upload and execute successfully.                  |
-| **Medium** | Basic extension validation | Simple upload attempts are blocked, but bypasses remain possible. |
-| **High**   | Improved validation        | Unauthorized file uploads become significantly more difficult.    |
+| Feature | Low | Medium | High |
+|---------|------|---------|------|
+| Protection | None | Client-side MIME type validation | Image processing after upload |
+| Bypass Technique | Upload PHP file | Modify MIME type | Requires another vulnerability (e.g., File Inclusion) |
+| Code Execution | ✅ | ✅ | Depends on application |
+
+> **Note:** Results are based on the tested DVWA environment.
 
 ---
 
-## Low Security
+# Low Security Level
 
-### Test Procedure
+## Attack Flow
 
-1. Upload a legitimate image to verify the upload functionality.
-2. Upload a PHP file to test whether executable files are accepted.
-3. Access the uploaded file from the upload directory.
-4. Verify whether the PHP code executes.
+| Step | Action | Result |
+|------|--------|--------|
+| 1 | Create a PHP web shell | Successful |
+| 2 | Upload `shell.php` | Upload accepted |
+| 3 | Browse to uploaded file | PHP executed successfully |
+| 4 | Verify execution using `phpinfo()` | Code execution confirmed |
 
-### Uploaded File
-
-**Filename**
-
-```text
-shell.php
-```
-
-**Content**
+### Payload
 
 ```php
 <?php
@@ -41,129 +37,136 @@ phpinfo();
 ?>
 ```
 
-### Evidence
+### Observation
 
-**File Upload**
-
-<p align="center">
-  <img src="../screenshots/File_upload/01_low_upload.png" width="100%">
-</p>
-
-**PHP File Executed**
-
-<p align="center">
-  <img src="../screenshots/File_upload/02_low_result.png" width="100%">
-</p>
-
-### Finding
-
-The application accepted and executed the uploaded PHP file without validating its type or restricting executable content.
+The application performs no validation on uploaded files, allowing arbitrary PHP files to be uploaded and executed.
 
 ---
 
-## Medium Security
-
-### Test Procedure
-
-1. Repeat the upload using the previous PHP file.
-2. Observe whether the upload is rejected.
-3. Test bypass techniques (e.g., modified extensions or content).
-4. Verify whether the uploaded file can still be executed.
+## Evidence
 
 ### Uploaded File
 
-**Filename**
+<p align="center">
+<img src="Screenshots/File_Upload/01_low_upload.png" width="100%">
+</p>
 
-```text
-(Add uploaded filename)
-```
+---
 
-**Content**
+### PHP Execution
+
+<p align="center">
+<img src="Screenshots/File_Upload/02_low_result.png" width="100%">
+</p>
+
+---
+
+# Medium Security Level
+
+## Attack Flow
+
+| Step | Action | Result |
+|------|--------|--------|
+| 1 | Upload `shell.php` | ❌ Rejected |
+| 2 | Intercept request using Burp Suite | Request captured |
+| 3 | Change `Content-Type` to `image/jpeg` | Upload accepted |
+| 4 | Browse to uploaded file | PHP executed successfully |
+
+### Payload
 
 ```php
-(Add uploaded file content)
+<?php
+phpinfo();
+?>
 ```
 
-### Evidence
+### Observation
 
-**File Upload**
-
-<p align="center">
-  <img src="../screenshots/File_upload/03_medium_upload.png" width="100%">
-</p>
-
-**Application Response**
-
-<p align="center">
-  <img src="../screenshots/File_upload/04_medium_result.png" width="100%">
-</p>
-
-### Finding
-
-Basic validation blocked direct uploads, but alternative techniques successfully bypassed the implemented restrictions.
+The application trusts the client-supplied MIME type. Modifying the `Content-Type` header bypasses the upload restriction.
 
 ---
 
-## High Security
+## Evidence
 
-### Test Procedure
+### Modified Burp Request
 
-1. Evaluate the implemented upload restrictions.
-2. Test whether common bypass techniques remain effective.
-3. Verify whether uploaded files are executable after upload.
+<p align="center">
+<img src="Screenshots/File_Upload/03_medium_payload.png" width="100%">
+</p>
 
-### Uploaded File
+---
 
-**Filename**
+### PHP Execution
 
-```text
-(Add uploaded filename)
-```
+<p align="center">
+<img src="Screenshots/File_Upload/04_medium_result.png" width="100%">
+</p>
 
-**Content**
+---
+
+# High Security Level
+
+## Attack Flow
+
+| Step | Action | Result |
+|------|--------|--------|
+| 1 | Upload `shell.php` | ❌ Rejected |
+| 2 | Upload image containing PHP | Upload accepted |
+| 3 | Access uploaded file directly | ❌ PHP not executed |
+| 4 | Combine with File Inclusion vulnerability | PHP executed |
+
+### Payload
 
 ```php
-(Add uploaded file content)
+<?php
+phpinfo();
+?>
 ```
 
-### Evidence
+### Observation
 
-**File Upload**
+The server processes uploaded images before storage, preventing direct execution. Successful exploitation requires chaining the upload with another vulnerability such as Local File Inclusion (LFI).
+
+---
+
+## Evidence
+
+### Uploaded Image
 
 <p align="center">
-  <img src="../screenshots/File_upload/05_high_upload.png" width="100%">
+<img src="Screenshots/File_Upload/05_high_upload.png" width="100%">
 </p>
 
-**Application Response**
+---
+
+### Code Execution via File Inclusion
 
 <p align="center">
-  <img src="../screenshots/File_upload/06_high_result.png" width="100%">
+<img src="Screenshots/File_Upload/06_high_result.png" width="100%">
 </p>
 
-### Finding
+---
 
-Improved validation prevented the uploaded file from being executed or significantly limited successful bypass attempts.
+# Root Cause
+
+The application does not securely validate uploaded files and allows untrusted content to reach executable locations.
 
 ---
 
-## Overall Impact
+# Overall Impact
 
-Successful exploitation may allow an attacker to:
-
-* Execute arbitrary code on the server.
-* Upload web shells for persistent access.
-* Read or modify sensitive application files.
-* Gain unauthorized control over the application.
-
----
-
-## Remediation
-
-* Allow only approved file types (allowlist).
-* Verify the file's MIME type and signature, not just its extension.
-* Store uploaded files outside the web root.
-* Rename uploaded files and disable execute permissions.
+- Remote Code Execution (RCE).
+- Complete server compromise.
+- Upload of web shells or backdoors.
+- Unauthorized access to sensitive data.
+- Potential lateral movement within the environment.
 
 ---
 
+# Remediation
 
+- Allow only required file extensions using an allowlist.
+- Validate file content on the server.
+- Store uploaded files outside the web root.
+- Rename uploaded files using random names.
+- Disable script execution in upload directories.
