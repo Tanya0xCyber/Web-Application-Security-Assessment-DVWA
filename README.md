@@ -42,8 +42,7 @@ This repository documents a manual web application penetration test conducted ag
 * File Upload
 * Cross-Site Request Forgery (CSRF)
 * Brute Force
-* Weak Session Management
-* *(Additional vulnerabilities may be added over time.)*
+* Client side javascript manipulation
 
 ---
 
