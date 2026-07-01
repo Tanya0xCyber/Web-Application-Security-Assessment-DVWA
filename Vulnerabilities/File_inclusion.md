@@ -27,12 +27,12 @@ File Inclusion is a vulnerability that allows attackers to include unintended fi
 
 ### Observation
 
-The application directly includes user-controlled input without validation, allowing arbitrary local files to be accessed.
+The application does not validate the file path before including it. As a result, any local file can be accessed using directory traversal.
 
 ### Evidence
 
 <p align="center">
-<img src="https://github.com/Tanya0xCyber/Web-Application-Security-Assessment-DVWA/tree/main/Screenshots/File_inclusion/01_low_result.png" width="100%">
+<img src="https://github.com/Tanya0xCyber/Web-Application-Security-Assessment-DVWA/blob/main/Screenshots/File_inclusion/01_low_result.png" width="100%">
 </p>
 
 ---
@@ -49,12 +49,12 @@ The application directly includes user-controlled input without validation, allo
 
 ### Observation
 
-The application filters directory traversal patterns only once. Using `....//` bypasses the filter and restores directory traversal.
+The application blocks basic directory traversal patterns, but the filter can be bypassed using an alternative traversal sequence (`....//`).
 
 ### Evidence
 
 <p align="center">
-<img src="https://github.com/Tanya0xCyber/Web-Application-Security-Assessment-DVWA/tree/main/Screenshots/File_inclusion/02_medium_result.png" width="100%">
+<img src="https://github.com/Tanya0xCyber/Web-Application-Security-Assessment-DVWA/blob/main/Screenshots/File_inclusion/02_medium_result.png" width="100%">
 </p>
 
 ---
@@ -72,20 +72,19 @@ The application filters directory traversal patterns only once. Using `....//` b
 
 ### Observation
 
-The application restricts filenames using `fnmatch("file*")`, which only verifies that the input starts with `file`. By prefixing the payload with `file1.php`, the validation is bypassed while directory traversal remains possible.
+The application checks whether the filename starts with `file`, but it does not validate the complete path. This allows the whitelist to be bypassed using `file1.php` followed by directory traversal.
 
 ### Evidence
 
 <p align="center">
-<img src="https://github.com/Tanya0xCyber/Web-Application-Security-Assessment-DVWA/tree/main/Screenshots/File_inclusion/03_high_result.png" width="100%">
+<img src="https://github.com/Tanya0xCyber/Web-Application-Security-Assessment-DVWA/blob/main/Screenshots/File_inclusion/03_high_result.png" width="100%">
 </p>
 
 ---
 
 ## Root Cause
 
-The application includes files using user-controlled input without securely validating the requested path. Blacklist filtering and wildcard matching are insufficient to prevent Local File Inclusion.
-
+The application includes files using user-controlled input and relies on weak validation, allowing attackers to bypass restrictions and include unintended files.
 
 ## Overall Impact
 
