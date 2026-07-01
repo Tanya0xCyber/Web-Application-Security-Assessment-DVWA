@@ -4,13 +4,9 @@
 
 SQL Injection (SQLi) is a vulnerability where user-controlled input is directly included in an SQL query without proper validation or parameterized queries. An attacker can manipulate SQL queries to retrieve, modify, or delete sensitive database information.
 
----
-
 ## Assessment Objective
 
 Assess the SQL Injection module in DVWA across different security levels to understand how different security controls affect exploitation and how SQL Injection can be identified during a penetration test.
-
----
 
 ## Security Level Comparison
 
@@ -21,14 +17,11 @@ Assess the SQL Injection module in DVWA across different security levels to unde
 | Input Validation | None | `mysql_real_escape_string()` | Session-based processing |
 | Request Modification | Direct | Burp Suite Required | Session value manipulated before SQL query |
 | SQL Query | Directly uses user input | Numeric parameter remains injectable | Session value still reaches vulnerable query |
-| Exploitation Difficulty | Easy | Moderate | Moderate |
-| SQL Injection Possible | ✅ Yes | ✅ Yes | ✅ Yes |
 
----
 
-# Low Security Level
+## Low Security Level
 
-## Reconnaissance
+### Reconnaissance
 
 | Activity | Finding |
 |----------|---------|
@@ -37,9 +30,7 @@ Assess the SQL Injection module in DVWA across different security levels to unde
 | Response analysis | Returned user information changes according to supplied ID. |
 | Initial assessment | User input directly influences database output. |
 
----
-
-## Exploitation
+### Exploitation
 
 | Phase | Payload / Command | Finding |
 |------|--------------------|---------|
@@ -55,7 +46,7 @@ Assess the SQL Injection module in DVWA across different security levels to unde
 
 ---
 
-## Findings
+### Findings
 
 - SQL Injection successfully confirmed.
 - Complete database enumeration was possible.
@@ -64,27 +55,16 @@ Assess the SQL Injection module in DVWA across different security levels to unde
 
 ---
 
-## Evidence
+### Evidence
 
 ### Screenshot 1 — SQL Injection Confirmed
-
-```text
-Payload:
-' OR 1=1#
-```
 
 <p align="center">
 <img src="https://github.com/Tanya0xCyber/Web-Application-Security-Assessment-DVWA/blob/main/Screenshots/SQLi/01_low_payload.png" width="100%">
 </p>
 
----
 
 ### Screenshot 2 — Usernames & Password Hashes Retrieved
-
-```text
-Payload:
-' UNION SELECT user,password FROM users#
-```
 
 <p align="center">
 <img src="https://github.com/Tanya0xCyber/Web-Application-Security-Assessment-DVWA/blob/main/Screenshots/SQLi/02_low_result.png" width="100%">
@@ -92,9 +72,9 @@ Payload:
 
 ---
 
-# Medium Security Level
+## Medium Security Level
 
-## Reconnaissance
+### Reconnaissance
 
 | Activity | Finding |
 |----------|---------|
@@ -103,9 +83,7 @@ Payload:
 | HTTP analysis | Request intercepted using Burp Suite. |
 | Attack surface verification | POST parameter remained user-controlled. |
 
----
-
-## Exploitation
+### Exploitation
 
 | Phase | Payload / Command | Finding |
 |------|--------------------|---------|
@@ -116,26 +94,20 @@ Payload:
 | Column Enumeration | `1 UNION SELECT column_name,NULL FROM information_schema.columns WHERE table_name='users'#` | Columns identified. |
 | Data Extraction | `1 UNION SELECT user,password FROM users#` | Password hashes extracted. |
 
----
-
-## Findings
+### Findings
 
 - Client-side restrictions were bypassed using Burp Suite.
 - Basic filtering did not prevent SQL Injection.
 - Database enumeration remained possible.
 - Sensitive data was successfully extracted.
 
----
-
-## Evidence
+### Evidence
 
 ### Screenshot 1 — Modified Burp Request
 
 <p align="center">
 <img src="https://github.com/Tanya0xCyber/Web-Application-Security-Assessment-DVWA/blob/main/Screenshots/SQLi/03_medium_payload.png" width="100%">
 </p>
-
----
 
 ### Screenshot 2 — Usernames & Password Hashes Retrieved
 
@@ -145,9 +117,9 @@ Payload:
 
 ---
 
-# High Security Level
+## High Security Level
 
-## Reconnaissance
+### Reconnaissance
 
 | Activity | Finding |
 |----------|---------|
@@ -158,7 +130,7 @@ Payload:
 
 ---
 
-## Exploitation
+### Exploitation
 
 | Phase | Payload / Command | Finding |
 |------|--------------------|---------|
@@ -168,26 +140,20 @@ Payload:
 | Column Enumeration | `a' UNION SELECT column_name,NULL FROM information_schema.columns WHERE table_name='users'#` | Columns identified. |
 | Data Extraction | `a' UNION SELECT user,password FROM users#` | Password hashes extracted successfully. |
 
----
-
-## Findings
+### Findings
 
 - Session-based processing did not eliminate SQL Injection.
 - Backend query remained vulnerable.
 - Database enumeration was still possible.
 - Sensitive user information was successfully extracted.
 
----
-
-## Evidence
+### Evidence
 
 ### Screenshot 1 — SQL Injection Confirmed
 
 <p align="center">
 <img src="https://github.com/Tanya0xCyber/Web-Application-Security-Assessment-DVWA/blob/main/Screenshots/SQLi/05_high_payload.png" width="100%">
 </p>
-
----
 
 ### Screenshot 2 — Usernames & Password Hashes Retrieved
 
@@ -197,13 +163,11 @@ Payload:
 
 ---
 
-# Root Cause
+## Root Cause
 
 The application builds SQL queries using user-controlled input instead of parameterized queries. Although the input method changes across security levels, the underlying SQL query remains vulnerable.
 
----
-
-# Overall Impact
+## Overall Impact
 
 - Unauthorized access to sensitive database information.
 - Extraction of usernames and password hashes.
@@ -211,9 +175,7 @@ The application builds SQL queries using user-controlled input instead of parame
 - Authentication bypass in vulnerable implementations.
 - Potential modification or deletion of database records depending on database permissions.
 
----
-
-# Remediation
+## Remediation
 
 - Use prepared statements (Parameterized Queries).
 - Validate and sanitize all user inputs.
