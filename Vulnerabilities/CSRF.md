@@ -2,133 +2,82 @@
 
 ## Overview
 
-Cross-Site Request Forgery (CSRF) allows an attacker to perform actions on behalf of an authenticated user by sending a forged request that the application trusts.
-
----
+Cross-Site Request Forgery (CSRF) is a vulnerability that forces an authenticated user to perform unwanted actions without their knowledge by sending forged requests to the application.
 
 ## Security Level Comparison
 
-| Level      | Protection                 | Result                              |
-| ---------- | -------------------------- | ----------------------------------- |
-| **Low**    | No CSRF token              | Forged requests are accepted.       |
-| **Medium** | Partial request validation | Basic attacks become less reliable. |
-| **High**   | CSRF token validation      | Unauthorized requests are rejected. |
+| Feature | Low | Medium |
+|---------|------|---------|
+| Protection | None | Referer Header Validation |
+| Successful Attack | Direct URL | Valid Referer Required | 
 
----
+> **Note:** Testing was performed on the DVWA (Linux) environment.
 
-## Low Security
+## Low Security Level
 
-### Verification
+### Attack Flow
 
-A forged request was created to perform a password change without requiring additional user interaction.
+| Step | Action | Result |
+|------|--------|--------|
+| 1 | Change password normally | Password updated successfully. |
+| 2 | Copy the generated URL | Request captured. |
+| 3 | Open the same URL while authenticated | ✅ Password changed again without confirmation. |
 
-### Attack Input
+### Request
 
-```html
-(Add forged HTML request)
+```text
+?password_new=test123&password_conf=test123&Change=Change
 ```
+
+### Observation
+
+The application accepts password change requests without verifying where the request originated.
 
 ### Evidence
 
-**Forged Request**
-
 <p align="center">
-  <img src="../screenshots/CSRF/01_low_request.png" width="100%">
+<img src="https://github.com/Tanya0xCyber/Web-Application-Security-Assessment-DVWA/blob/main/Screenshots/CSRF/01_low_result.png" width="100%">
 </p>
-
-**Password Updated**
-
-<p align="center">
-  <img src="../screenshots/CSRF/02_low_result.png" width="100%">
-</p>
-
-### Finding
-
-The application processed the forged request because no mechanism was present to verify that the request originated from the legitimate user.
 
 ---
 
-## Medium Security
+## Medium Security Level
 
-### Verification
+### Attack Flow
 
-The same attack was repeated after introducing additional request validation.
+| Test | Result |
+|------|--------|
+| Remove `Referer` header | ❌ Request rejected |
+| Fake `Referer` header | ❌ Request rejected |
+| Valid DVWA `Referer` header | ✅ Password changed |
 
-### Attack Input
+### Observation
 
-```html
-(Add forged request)
-```
+The application verifies the `Referer` header before processing the request. Requests without the expected `Referer` are rejected.
 
 ### Evidence
 
-**Forged Request**
-
 <p align="center">
-  <img src="../screenshots/CSRF/03_medium_request.png" width="100%">
+<img src="https://github.com/Tanya0xCyber/Web-Application-Security-Assessment-DVWA/blob/main/Screenshots/CSRF/02_medium_result.png" width="100%">
 </p>
-
-**Application Response**
-
-<p align="center">
-  <img src="../screenshots/CSRF/04_medium_result.png" width="100%">
-</p>
-
-### Finding
-
-Basic validation reduced the success rate of the attack, although bypasses remained possible.
 
 ---
 
-## High Security
+## Root Cause
 
-### Verification
-
-The attack was repeated against the hardened implementation.
-
-### Attack Input
-
-```html
-(Add forged request)
-```
-
-### Evidence
-
-**Forged Request**
-
-<p align="center">
-  <img src="../screenshots/CSRF/05_high_request.png" width="100%">
-</p>
-
-**Application Response**
-
-<p align="center">
-  <img src="../screenshots/CSRF/06_high_result.png" width="100%">
-</p>
-
-### Finding
-
-Requests without a valid CSRF token were rejected, preventing unauthorized actions.
-
----
+User requests are not consistently protected against unauthorized actions. Missing or weak request validation allows attackers to perform actions on behalf of authenticated users.
 
 ## Overall Impact
 
-If exploited successfully, an attacker may be able to:
-
-* Change account information.
-* Reset passwords or email addresses.
-* Trigger sensitive actions using the victim's session.
-* Perform unauthorized operations without the victim's knowledge.
-
----
+- Unauthorized password changes.
+- Account compromise.
+- Unauthorized actions performed as authenticated users.
+- Complete application compromise if administrative accounts are targeted.
 
 ## Remediation
 
-* Require a unique **CSRF token** for every sensitive request.
-* Validate the **Origin** or **Referer** header when appropriate.
-* Use **SameSite** cookies to reduce cross-site requests.
-* Require password confirmation for critical account changes.
-
----
-
+- Use anti-CSRF tokens for all state-changing requests.
+- Verify the `Origin` or `Referer` header where appropriate.
+- Use the `SameSite` attribute for session cookies.
+- Require user re-authentication for sensitive actions.
+- Combine CSRF protection with secure session management.
