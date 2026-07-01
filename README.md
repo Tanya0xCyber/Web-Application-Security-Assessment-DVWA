@@ -2,84 +2,80 @@
 
 ## Overview
 
-This repository documents a manual web application penetration test conducted against **Damn Vulnerable Web Application (DVWA)** in a controlled lab environment. The objective was to identify, validate, and document common web security vulnerabilities while following a structured penetration testing methodology.
-
----
-
-## Target
-
-* **Application:** Damn Vulnerable Web Application (DVWA)
-* **Environment:** Local Virtual Lab
-* **Assessment Type:** Manual Web Application Penetration Testing
+This repository documents a manual **Web Application Security Assessment** performed on **Damn Vulnerable Web Application (DVWA)** in a controlled lab environment. The assessment demonstrates the identification, exploitation, and documentation of common web application vulnerabilities using industry-standard penetration testing techniques.
 
 ---
 
 ## Objectives
 
-* Identify common web application vulnerabilities.
-* Understand how each vulnerability can be exploited.
-* Assess the potential security impact.
-* Document findings with evidence and remediation recommendations.
+- Identify common web application vulnerabilities.
+- Validate each vulnerability through manual testing.
+- Analyze security controls across different security levels.
+- Document findings with evidence, impact, and remediation.
 
 ---
 
 ## Tools Used
 
-* Burp Suite
-* Firefox
-* Kali Linux
-* Nmap
-* SQLMap *(used only for verification where applicable)*
+- Burp Suite
+- Firefox Developer Tools
+- Kali Linux
+- Nmap
+- SQLMap *(Verification Only)*
 
 ---
 
-## Vulnerabilities Covered
+## Vulnerabilities Assessed
 
-* SQL Injection (SQLi)
-* Cross-Site Scripting (XSS)
-* Command Injection
-* File Inclusion
-* File Upload
-* Cross-Site Request Forgery (CSRF)
-* Brute Force
-* Client side javascript manipulation
+- SQL Injection (SQLi)
+- Reflected Cross-Site Scripting (XSS)
+- Stored Cross-Site Scripting (XSS)
+- DOM-Based Cross-Site Scripting (XSS)
+- Command Injection
+- File Upload
+- File Inclusion (LFI)
+- Cross-Site Request Forgery (CSRF)
+- Brute Force Authentication
 
 ---
 
 ## Repository Structure
 
 ```text
-DVWA-Web-Penetration-Testing-Report/
+Web-Application-Security-Assessment-DVWA/
 │
 ├── README.md
-├── screenshots/
-└── vulnerabilities/
+├── Vulnerabilities/
+│        ├── SQL_Injection.md
+│        ├── Command_Injection.md
+│        ├── File_Upload.md
+│        ├── File_Inclusion.md
+│        ├── CSRF.md
+│        ├── Brute_Force.md
+│        ├── XSS/
+│            ├── reflected_xss.md
+│            ├── stored_xss.md
+│            └── dom_xss.md
+└── Screenshots/
 ```
 
-Each vulnerability contains:
+---
 
-* Overview
-* Detection Process
-* Testing Steps
-* Payloads
-* Screenshots
-* Security Impact
-* Remediation
-* References
+## Report Structure
+
+Each vulnerability report includes:
+
+- Overview
+- Security Level Comparison
+- Attack Flow
+- Evidence
+- Observation
+- Root Cause
+- Impact
+- Remediation
 
 ---
 
-## Skills Demonstrated
+## Disclaimer
 
-* Web Application Penetration Testing
-* Vulnerability Assessment
-* Manual Security Testing
-* HTTP Request Analysis
-* Burp Suite Usage
-* Security Reporting
-* Risk Assessment
-* Remediation Documentation
-
----
-
-> **Disclaimer:** This assessment was performed only against an intentionally vulnerable application for educational and ethical purposes.
+This project was conducted in a controlled laboratory environment using **Damn Vulnerable Web Application (DVWA)** for educational and ethical security testing purposes only.
